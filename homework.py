@@ -34,7 +34,7 @@ HOMEWORK_STATUSES = {
 
 
 hw_logger = logging.getLogger(__name__)
-hw_logger.setLevel(logging.INFO)
+hw_logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
 hw_logger.addHandler(handler)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -143,6 +143,7 @@ def main() -> None:
     if not check_tokens():
         raise exceptions.MissingVariableError
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    hw_logger.info('Бот запущен.')
     current_timestamp = int(time.time())
     previous_error = ''
     while True:
@@ -155,9 +156,6 @@ def main() -> None:
                     send_message(bot, message)
             else:
                 hw_logger.debug("Нет обновлений статуса домашних работ.")
-            current_timestamp = int(time.time())
-            time.sleep(RETRY_TIME)
-
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             hw_logger.error(error)
@@ -172,6 +170,8 @@ def main() -> None:
             hw_logger.info(
                 "Проверка статуса домашних работ успешно завершена."
             )
+            current_timestamp = int(time.time())
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
