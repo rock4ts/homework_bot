@@ -40,26 +40,30 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler.setFormatter(formatter)
 
 
-def send_message(bot: telegram.Bot, message: str) -> None:
-    """Функция отправки Telegram-ботом сообщения о статусе домашней работы.
-
-    C помощью Telegram-бота отправляет пользователю
-    сообщение о статусе проверки домашней работы.
-    В случае успешной отправки сообщения,
-    информация об этом выводится в журнал логирования.
+def check_tokens() -> bool:
     """
-    try:
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-    except TelegramError:
-        raise TelegramError("Ошибка отправки сообщения в Telegram.")
+    Проверка доступности переменных окружения.
+    При успешной проверке возвращает True, в противном случае - False.
+    """
+    required_vars = ['PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID']
+    missing_vars = []
+    for var in required_vars:
+        if globals()[var] is None or globals()[var] == '':
+            missing_vars.append(var)
+    if missing_vars:
+        hw_logger.critical(
+            f"Отсутствуют необходимые переменные окружения: "
+            f"{','.join(missing_vars)}.\n"
+            f"Программа принудительно остановлена."
+        )
+        return False
+    return True
 
 
 def get_api_answer(current_timestamp: int) -> Any:
-    """Функция получения ответа от API Практикум.Домашка.
-
-    Делает запрос к эндпоинту API сервиса Практикум.Домашка
-    и возвращает ответ API,
-    преобразовав его из формата JSON к типам данных Python.
+    """
+    Делает запрос к эндпоинту API сервиса Практикум.Домашка и
+    приводит данные ответа к формату Python.
     """
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
@@ -91,12 +95,9 @@ def get_api_answer(current_timestamp: int) -> Any:
 
 
 def check_response(response: Any) -> list:
-    """Функция проверки ответа API.
-
-    Проверяет ответ API на корректность.
-    Если ответ API соответствует ожиданиям,
-    то функция должна вернуть список домашних работ (может быть пустым),
-    доступный в ответе API по ключу 'homeworks'.
+    """
+    Проверка ответа API на соотвествие ожидаемой структуре данных.
+    При успешной проверке возвращает список домашних работ (может быть пустым).
     """
     if not isinstance(response, dict):
         raise TypeError("Ответ API не в виде словаря.")
@@ -111,11 +112,9 @@ def check_response(response: Any) -> list:
 
 
 def parse_status(homework: dict) -> str:
-    """Функция получения сообщения о статусе проверки домашней работы.
-
-    Извлекает из информации о конкретной домашней работе статус этой работы
-    и возвращает подготовленную для отправки в Telegram строку,
-    содержащую один из вердиктов словаря HOMEWORK_STATUSES.
+    """
+    Извлекает статус домашней работы из словаря
+    и возвращает сообщение соответствующее статусу.
     """
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
@@ -130,32 +129,19 @@ def parse_status(homework: dict) -> str:
             f' "{homework_name}". {verdict}')
 
 
-def check_tokens() -> bool:
-    """Функция проверки наличия обязательных переменных окружения.
-
-    Проверяет доступность переменных окружения,
-    которые необходимы для работы программы.
-    Если отсутствует хотя бы одна переменная — функция возвращает False,
-    иначе — True.
+def send_message(bot: telegram.Bot, message: str) -> None:
     """
-    required_vars = ['PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID']
-    # function instance assignment for exception's message
-    missing_vars = []
-    for var in required_vars:
-        if globals()[var] is None or globals()[var] == '':
-            missing_vars.append(var)
-    if missing_vars:
-        hw_logger.critical(
-            f"Отсутствуют необходимые переменные окружения: "
-            f"{','.join(missing_vars)}.\n"
-            f"Программа принудительно остановлена."
-        )
-        return False
-    return True
+    Отправляет пользователю сообщение о статусе проверки домашней работы
+    с помощью Telegram-бота.
+    """
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    except TelegramError:
+        raise TelegramError("Ошибка отправки сообщения в Telegram.")
 
 
 def main() -> None:
-    """Основная логика работы бота."""
+    """Логика работы телеграм-бота."""
     if not check_tokens():
         raise user_exceptions.MissingVariableError
     bot = telegram.Bot(token=TELEGRAM_TOKEN)

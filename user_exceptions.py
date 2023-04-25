@@ -1,4 +1,7 @@
-# файл с пользовательскими исключениями
+'''
+Файл с пользовательскими исключениями,
+могут возникнуть при сбое работы пакета homework_bot.py .
+'''
 
 messages_dict = {
     'missing_var':
@@ -16,8 +19,7 @@ messages_dict = {
 
 class MissingVariableError(Exception):
     """
-    Исключение, возникающее,
-    когда отсутсвует значение необходимой для работы программы-бота переменной.
+    Ошибка отсутсвия переменной окружения.
     """
     def __init__(
         self, missing_vars, message=messages_dict['missing_var']
@@ -32,8 +34,7 @@ class MissingVariableError(Exception):
 
 class EndPointError(Exception):
     """
-    Исключение, возникающее 
-    в случае сбоя запроса к эндпоинту API Практикум.Домашка.
+    Cбой запроса к эндпоинту API Практикум.Домашка.
     """
     def __init__(self, message=messages_dict['endpoint_error']):
         self.message = message
@@ -42,8 +43,7 @@ class EndPointError(Exception):
 
 class EmptyResponseDictError(Exception):
     """
-    Исключение, возникающеее,
-    когда ответ API содержит пустой словарь.
+    Ошибка ответа API: ответ содержит пустой словарь.
     """
     def __init__(self, message=messages_dict['empty_response_dict']):
         self.message = message
@@ -52,8 +52,7 @@ class EmptyResponseDictError(Exception):
 
 class UnknownHomeworkStatusError(Exception):
     """
-    Исключение, возникающее, 
-    когда ответ API содержит неизвестный статус домашней работы.
+    Ошибка ответа API: ответ содержит неизвестный статус домашней работы.
     """
     def __init__(self, message=messages_dict['unknown_homework_status']):
         self.message = message
